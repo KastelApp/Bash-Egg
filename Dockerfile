@@ -6,7 +6,7 @@ RUN apt update \
     && apt upgrade -y \
     && apt -y install curl software-properties-common locales git \
     && apt-get install -y default-jre \
-    && apt-get install lzma liblzma-dev libcurl4 libcurl4-openssl-dev \
+    && apt-get -y install lzma liblzma-dev libcurl4 libcurl4-openssl-dev \
     && adduser container \
     && apt-get update 
 

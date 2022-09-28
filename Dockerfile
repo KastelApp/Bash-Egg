@@ -9,6 +9,16 @@ RUN apt update \
     && apt-get -y install lzma liblzma-dev libcurl4 libcurl4-openssl-dev \
     && adduser container \
     && apt-get update 
+    
+RUN curl -fsSL https://packages.redis.io/gpg |  gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" |  tee /etc/apt/sources.list.d/redis.list && \
+    apt update && \
+    apt install -y redis
+
+RUN wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc |  apt-key add - && \
+    echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/6.0 main" |  tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
+    apt update && \
+    apt install -y mongodb-org
 
 # Grant sudo permissions to container user for commands
 RUN apt-get update && \

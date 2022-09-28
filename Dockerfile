@@ -11,7 +11,7 @@ RUN apt update \
     && apt-get update 
     
 
-RUN apt-get -y install gnupg
+RUN apt-get -y install gnupg wget
     
 RUN curl -fsSL https://packages.redis.io/gpg |  gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" |  tee /etc/apt/sources.list.d/redis.list && \

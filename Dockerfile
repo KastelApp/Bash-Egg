@@ -1,6 +1,7 @@
 FROM debian:buster
 
-MAINTAINER danielpmc, <dan@danbot.host>
+# Credits to DBH for the egg
+MAINTAINER darkerink, <darkerinker@gmail.com>
 
 RUN apt update \
     && apt upgrade -y \
@@ -70,3 +71,5 @@ WORKDIR /home/container
 COPY ./entrypoint.sh /entrypoint.sh
 
 CMD ["/bin/bash", "/entrypoint.sh"]
+
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash

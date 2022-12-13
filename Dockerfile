@@ -43,7 +43,15 @@ RUN curl -sL https://deb.nodesource.com/setup_current.x | bash - \
     && apt -y install wget \ 
     && apt -y install curl \
     && apt -y install libtool
-    
+   
+RUN wget https://packages.microsoft.com/config/debian/10/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
+   && dpkg -i packages-microsoft-prod.deb \ 
+   && rm packages-microsoft-prod.deb \
+   && apt-get update \
+   && apt-get install -y apt-transport-https \
+   && apt-get update \
+   && apt-get install -y aspnetcore-runtime-6.0 dotnet-sdk-6.0 
+
 # Install basic software support
 RUN apt-get update && \
     apt-get install -y software-properties-common

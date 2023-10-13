@@ -1,7 +1,6 @@
 FROM debian:buster
 
-# Credits to DBH for the egg
-MAINTAINER darkerink, <darkerinker@gmail.com>
+LABEL author="darkerink, <darkerink@hotmail.com>"
 
 RUN apt update \
     && apt upgrade -y \
@@ -92,13 +91,12 @@ RUN apt -y install golang
 # Misc
 RUN apt install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 
-
 # Installing NodeJS dependencies for AIO.
-RUN npm i -g pm2 nodemon typescript
+# RUN npm i -g pm2 nodemon typescript
 
-RUN corepack enable
+# RUN corepack enable
 
-RUN corepack prepare yarn@stable --activate
+# RUN corepack prepare yarn@stable --activate
 
 USER container
 ENV  USER container

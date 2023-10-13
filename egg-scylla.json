@@ -20,7 +20,13 @@
         "logs": "{}",
         "stop": "^C && ^C && ^C && exit"
     },
-    "scripts": {},
+    "scripts": {
+        "installation": {
+            "script": "",
+            "container": "debian:buster-slim",
+            "entrypoint": "bash"
+        }
+    },
     "variables": [
         {
             "name": "Startup Command",

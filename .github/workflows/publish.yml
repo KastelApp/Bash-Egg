@@ -11,7 +11,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      # Add your test steps here if needed...
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4

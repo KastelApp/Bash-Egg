@@ -50,53 +50,9 @@ RUN apt-get update && \
 # Python 2 & 3
 RUN apt -y install python python-pip python3 python3-pip
 
-RUN apt-get install -y \
-    fonts-liberation \
-    gconf-service \
-    libappindicator1 \
-    libasound2 \
-    libatk1.0-0 \
-    libcairo2 \
-    libcups2 \
-    libfontconfig1 \
-    libgbm-dev \
-    libgdk-pixbuf2.0-0 \
-    libgtk-3-0 \
-    libicu-dev \
-    libjpeg-dev \
-    libnspr4 \
-    libnss3 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libpng-dev \
-    libx11-6 \
-    libx11-xcb1 \
-    libxcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxi6 \
-    libxrandr2 \
-    libxrender1 \
-    libxss1 \
-    libxtst6 \
-    xdg-utils
-
-
-# Golang
 RUN apt -y install golang
 
-# Misc
 RUN apt install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
-
-# Installing NodeJS dependencies for AIO.
-# RUN npm i -g pm2 nodemon typescript
-
-# RUN corepack enable
-
-# RUN corepack prepare yarn@stable --activate
 
 USER container
 ENV  USER container

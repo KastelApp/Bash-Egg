@@ -1,1 +1,3 @@
-# Bash-Egg
+# YOU WILL NOT GET SUPPORT FOR USING THIS
+
+Do not do it

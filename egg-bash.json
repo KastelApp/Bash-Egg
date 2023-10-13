@@ -4,27 +4,27 @@
         "version": "PTDL_v2",
         "update_url": null
     },
-    "exported_at": "2023-10-13T14:03:16-04:00",
-    "name": "AIO",
+    "exported_at": "2023-10-13T15:44:21-04:00",
+    "name": "bash",
     "author": "darkerink@hotmail.com",
     "description": "Just a simple egg that has a ton of stuff in it for bash",
     "features": null,
     "docker_images": {
-        "Githubs": "ghcr.io/kastelapp/bash:latest"
+        "Githubs": "ghcr.io\/kastelapp\/internal\/bash:sha-f2a2f0c"
     },
     "file_denylist": [],
     "startup": "{{STARTUP_CMD}}",
     "config": {
         "files": "{}",
-        "startup": "{\"done\": \"\"}",
+        "startup": "{\r\n    \"done\": \"\"\r\n}",
         "logs": "{}",
-        "stop": "^C"
+        "stop": "^C && ^C && ^C && exit"
     },
     "scripts": {
         "installation": {
-            "script": null,
-            "container": "alpine:3.4",
-            "entrypoint": "ash"
+            "script": "#!\/bin\/bash\r\napt update\r\napt install -y git curl zip unzip wget\r\nmkdir -p \/mnt\/server\r\ncd \/mnt\/server\r\ncurl -fsSL https:\/\/bun.sh\/install | bash\r\ncp -r ~\/.bun \/mnt\/server\r\ncp -r ~\/.bashrc \/mnt\/server",
+            "container": "debian:buster-slim",
+            "entrypoint": "bash"
         }
     },
     "variables": [

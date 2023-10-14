@@ -86,11 +86,11 @@ seed_provider:
 # If you leave broadcast_address (below) empty, then setting listen_address
 # to 0.0.0.0 is wrong as other nodes will not know how to reach this node.
 # If you set broadcast_address, then you can set listen_address to 0.0.0.0.
-listen_address: localhost
+listen_address: 0.0.0.0
 
 # Address to broadcast to other Scylla nodes
 # Leaving this blank will set it to the same value as listen_address
-# broadcast_address: 1.2.3.4
+broadcast_address: 0.0.0.0
 
 
 # When using multiple physical network interfaces, set this to true to listen on broadcast_address
@@ -102,7 +102,7 @@ listen_address: localhost
 # port for the CQL native transport to listen for clients on
 # For security reasons, you should not expose this port to the internet. Firewall it if needed.
 # To disable the CQL native transport, remove this option and configure native_transport_port_ssl.
-native_transport_port: 9042
+native_transport_port: {{SERVER_PORT}}
 
 # Like native_transport_port, but clients are forwarded to specific shards, based on the
 # client-side port numbers.
@@ -510,7 +510,7 @@ commitlog_total_space_in_mb: -1
 # internal communication. If the monitoring node is not in this internal
 # network, you can override prometheus_address explicitly - e.g., setting
 # it to 0.0.0.0 to listen on all interfaces.
-# prometheus_address: 1.2.3.4
+prometheus_address: 0.0.0.0
 
 # Distribution of data among cores (shards) within a node
 #

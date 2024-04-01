@@ -43,6 +43,8 @@ RUN curl -sL https://deb.nodesource.com/setup_current.x | bash - \
     && apt -y install curl \
     && apt -y install libtool
 
+# RUN curl -fsSL https://bun.sh/install | bash
+
 # Install basic software support
 RUN apt-get update && \
     apt-get install -y software-properties-common
@@ -50,7 +52,15 @@ RUN apt-get update && \
 # Python 2 & 3
 RUN apt -y install python python-pip python3 python3-pip
 
-RUN apt -y install golang
+# Download Go 1.22.1
+RUN curl -o go1.22.1.linux-amd64.tar.gz https://dl.google.com/go/go1.22.1.linux-amd64.tar.gz
+
+# Extract the downloaded archive
+RUN tar -C /usr/local -xzf go1.22.1.linux-amd64.tar.gz
+
+# Set the Go environment variables
+ENV GOROOT=/usr/local/go
+ENV PATH=$GOROOT/bin:$PATH
 
 RUN apt install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 

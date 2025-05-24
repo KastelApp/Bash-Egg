@@ -5,7 +5,7 @@ LABEL author="darkerink, <darkerink@hotmail.com>"
 # Set DEBIAN_FRONTEND to noninteractive to avoid prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-# System dependencies, including build tools for Python
+# Install essential system utilities and libraries
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
@@ -20,21 +20,8 @@ RUN apt-get update && \
     gnupg \
     wget \
     sudo \
-    # Python build dependencies
-    build-essential \
-    libssl-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    llvm \ # Sometimes needed for optimizations
-    libncurses5-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev \
-    libffi-dev \
-    liblzma-dev \
-    # Other dependencies from original file
+    # Libraries from original Dockerfile
+    lzma \ # The lzma utility
     libcurl4 \
     libcurl4-openssl-dev \
     ffmpeg \
@@ -45,7 +32,7 @@ RUN apt-get update && \
     libjpeg-dev \
     libgif-dev \
     librsvg2-dev && \
-    # Add user after system packages are installed
+    # Add user
     adduser --disabled-password --gecos "" container && \
     # Clean up apt cache
     apt-get clean && \
@@ -57,7 +44,7 @@ ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
-# NodeJS (current version)
+# NodeJS (current stable version)
 RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - && \
     apt-get update && \
     apt-get install -y --no-install-recommends nodejs && \
@@ -70,13 +57,31 @@ ENV PYTHON_VERSION 3.13.0
 ENV PYTHON_PIP_VERSION 24.0 # Or a more recent version of pip
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends wget build-essential libssl-dev zlib1g-dev libbz2-dev \
-    libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev \
-    xz-utils tk-dev libffi-dev liblzma-dev git && \
+    apt-get install -y --no-install-recommends \
+    # Python build dependencies
+    wget \
+    build-essential \
+    libssl-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    # llvm is sometimes needed for Python build optimizations
+    llvm \
+    libncurses5-dev \
+    libncursesw5-dev \
+    xz-utils \
+    tk-dev \
+    libffi-dev \
+    liblzma-dev \
+    # git is already installed but good to ensure for pip if it wasn't
+    git && \
+    # Download Python source
     wget "https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz" -O /tmp/Python.tar.xz && \
     mkdir -p /usr/src/python && \
     tar -xJf /tmp/Python.tar.xz -C /usr/src/python --strip-components=1 && \
     rm /tmp/Python.tar.xz && \
+    # Configure, compile, and install Python
     cd /usr/src/python && \
     ./configure \
     --enable-optimizations \
@@ -86,32 +91,32 @@ RUN apt-get update && \
     --with-ensurepip=install && \
     make -j$(nproc) && \
     make altinstall && \
-    # Ensure /usr/local/bin is in PATH and preferred
-    # Create symlinks for python3 and pip3 to the new version
-    # altinstall creates python3.13, pip3.13 etc.
+    # Create symlinks for python3 and pip3
     ln -s /usr/local/bin/python$(echo $PYTHON_VERSION | cut -d. -f1,2) /usr/local/bin/python3 && \
     ln -s /usr/local/bin/pip$(echo $PYTHON_VERSION | cut -d. -f1,2) /usr/local/bin/pip3 && \
     # Upgrade pip for the new Python
     /usr/local/bin/python3 -m pip install --no-cache-dir --upgrade pip~=$PYTHON_PIP_VERSION setuptools wheel && \
-    # Clean up build artifacts and dependencies (some -dev packages might be needed if C extensions are built later)
-    # For a smaller image, use a multi-stage build
+    # Clean up build artifacts
     cd / && \
     rm -rf /usr/src/python && \
-    # The following line is aggressive and might remove dev packages needed by other tools.
-    # Consider a multi-stage build for proper cleanup.
-    # apt-get purge -y --auto-remove build-essential llvm && \
+    # Consider a multi-stage build for more aggressive cleanup of build dependencies
+    # For now, just autoremove and clean apt
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Go 1.22.1 (or update to a newer version if desired)
+# Go (using 1.22.1 as per original, update if needed)
 ENV GO_VERSION 1.22.1
-RUN curl -o go${GO_VERSION}.linux-amd64.tar.gz https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    curl -o go${GO_VERSION}.linux-amd64.tar.gz https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
-    rm go${GO_VERSION}.linux-amd64.tar.gz
+    rm go${GO_VERSION}.linux-amd64.tar.gz && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set Go environment variables
-# Also ensure /usr/local/bin (for Python) is in PATH and takes precedence
+# Ensure /usr/local/bin (for Python) is in PATH and takes precedence
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/go
 ENV PATH=/usr/local/bin:$GOROOT/bin:$GOPATH/bin:$PATH

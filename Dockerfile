@@ -2,74 +2,128 @@ FROM debian:buster
 
 LABEL author="darkerink, <darkerink@hotmail.com>"
 
-RUN apt update \
-    && apt upgrade -y \
-    && apt -y install curl software-properties-common locales git \
-    && apt-get install -y default-jre \
-    && apt-get install -y zip unzip \
-    && apt-get -y install lzma liblzma-dev libcurl4 libcurl4-openssl-dev \
-    && adduser container \
-    && apt-get update 
-    
+# Set DEBIAN_FRONTEND to noninteractive to avoid prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get -y install gnupg wget
-    
-RUN curl -fsSL https://packages.redis.io/gpg |  gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" |  tee /etc/apt/sources.list.d/redis.list && \
-    apt update && \
-    apt install -y redis
-
-RUN wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc |  apt-key add - && \
-    echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/6.0 main" |  tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
-    apt update && \
-    apt install -y mongodb-org
-
-# Grant sudo permissions to container user for commands
+# System dependencies, including build tools for Python
 RUN apt-get update && \
-    apt-get -y install sudo
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    # Basic utilities
+    curl \
+    software-properties-common \
+    locales \
+    git \
+    default-jre \
+    zip \
+    unzip \
+    gnupg \
+    wget \
+    sudo \
+    # Python build dependencies
+    build-essential \
+    libssl-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    llvm \ # Sometimes needed for optimizations
+    libncurses5-dev \
+    libncursesw5-dev \
+    xz-utils \
+    tk-dev \
+    libffi-dev \
+    liblzma-dev \
+    # Other dependencies from original file
+    libcurl4 \
+    libcurl4-openssl-dev \
+    ffmpeg \
+    make \
+    libtool \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev && \
+    # Add user after system packages are installed
+    adduser --disabled-password --gecos "" container && \
+    # Clean up apt cache
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Ensure UTF-8
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
 
-# NodeJS
-RUN curl -sL https://deb.nodesource.com/setup_current.x | bash - \
-    && apt -y install nodejs \
-    && apt -y install ffmpeg \
-    && apt -y install make \
-    && apt -y install build-essential \
-    && apt -y install wget \ 
-    && apt -y install curl \
-    && apt -y install libtool
+# NodeJS (current version)
+RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# RUN curl -fsSL https://bun.sh/install | bash
+# Python 3.13 (or latest available 3.13.x)
+# Check https://www.python.org/ftp/python/ for the latest version
+ENV PYTHON_VERSION 3.13.0
+ENV PYTHON_PIP_VERSION 24.0 # Or a more recent version of pip
 
-# Install basic software support
 RUN apt-get update && \
-    apt-get install -y software-properties-common
-    
-# Python 2 & 3
-RUN apt -y install python python-pip python3 python3-pip
+    apt-get install -y --no-install-recommends wget build-essential libssl-dev zlib1g-dev libbz2-dev \
+    libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev \
+    xz-utils tk-dev libffi-dev liblzma-dev git && \
+    wget "https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz" -O /tmp/Python.tar.xz && \
+    mkdir -p /usr/src/python && \
+    tar -xJf /tmp/Python.tar.xz -C /usr/src/python --strip-components=1 && \
+    rm /tmp/Python.tar.xz && \
+    cd /usr/src/python && \
+    ./configure \
+    --enable-optimizations \
+    --prefix=/usr/local \
+    --enable-shared \
+    LDFLAGS="-Wl,-rpath=/usr/local/lib" \
+    --with-ensurepip=install && \
+    make -j$(nproc) && \
+    make altinstall && \
+    # Ensure /usr/local/bin is in PATH and preferred
+    # Create symlinks for python3 and pip3 to the new version
+    # altinstall creates python3.13, pip3.13 etc.
+    ln -s /usr/local/bin/python$(echo $PYTHON_VERSION | cut -d. -f1,2) /usr/local/bin/python3 && \
+    ln -s /usr/local/bin/pip$(echo $PYTHON_VERSION | cut -d. -f1,2) /usr/local/bin/pip3 && \
+    # Upgrade pip for the new Python
+    /usr/local/bin/python3 -m pip install --no-cache-dir --upgrade pip~=$PYTHON_PIP_VERSION setuptools wheel && \
+    # Clean up build artifacts and dependencies (some -dev packages might be needed if C extensions are built later)
+    # For a smaller image, use a multi-stage build
+    cd / && \
+    rm -rf /usr/src/python && \
+    # The following line is aggressive and might remove dev packages needed by other tools.
+    # Consider a multi-stage build for proper cleanup.
+    # apt-get purge -y --auto-remove build-essential llvm && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Download Go 1.22.1
-RUN curl -o go1.22.1.linux-amd64.tar.gz https://dl.google.com/go/go1.22.1.linux-amd64.tar.gz
+# Go 1.22.1 (or update to a newer version if desired)
+ENV GO_VERSION 1.22.1
+RUN curl -o go${GO_VERSION}.linux-amd64.tar.gz https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
+    rm go${GO_VERSION}.linux-amd64.tar.gz
 
-# Extract the downloaded archive
-RUN tar -C /usr/local -xzf go1.22.1.linux-amd64.tar.gz
-
-# Set the Go environment variables
+# Set Go environment variables
+# Also ensure /usr/local/bin (for Python) is in PATH and takes precedence
 ENV GOROOT=/usr/local/go
-ENV PATH=$GOROOT/bin:$PATH
+ENV GOPATH=/go
+ENV PATH=/usr/local/bin:$GOROOT/bin:$GOPATH/bin:$PATH
 
-RUN apt install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
-
+# Switch to non-root user
 USER container
-ENV  USER container
-ENV  HOME /home/container
+ENV USER=container
+ENV HOME=/home/container
 
 WORKDIR /home/container
 
 COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 CMD ["/bin/bash", "/entrypoint.sh"]

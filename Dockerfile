@@ -51,7 +51,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - && \
 
 # Python 3.13 installation from source
 # Check https://www.python.org/ftp/python/ for the latest version
-ENV PYTHON_VERSION 3.13.0
+ENV PYTHON_VERSION 3.13.3
 ENV PYTHON_PIP_VERSION 24.0
 
 # Install Python build dependencies and compile Python from source
